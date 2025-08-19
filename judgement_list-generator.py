@@ -223,19 +223,19 @@ def main():
     """Main function to generate judgment list from UBI data."""
 
     # Configuration
-    QUERIES_INDEX = "ubi_queries1"  # Update with your queries index name
-    EVENTS_INDEX = "ubi_events2"  # Update with your events index name
-    OUTPUT_FILE = "judgment_list.csv"
-    API_KEY = os.getenv("API_KEY")
-    ES_HOST = os.getenv("ES_HOST")
+    queries_index = "ubi_queries1"  # Update with your queries index name
+    events_index = "ubi_events2"  # Update with your events index name
+    output_file = "judgment_list.csv"
+    api_key = os.getenv("ELASTICSEARCH_API_KEY")
+    es_host = os.getenv("ELASTICSEARCH_HOST")
 
-    print(ES_HOST)
+    print(es_host)
     try:
         # Initialize Elasticsearch client
-        es = Elasticsearch(hosts=ES_HOST, api_key=API_KEY)
+        es = Elasticsearch(hosts=es_host, api_key=api_key)
 
         # Fetch UBI data
-        queries_data, events_data = fetch_ubi_data(es, QUERIES_INDEX, EVENTS_INDEX)
+        queries_data, events_data = fetch_ubi_data(es, queries_index, events_index)
 
         # Generate judgment list
         judgment_df = process_ubi_data(queries_data, events_data)
@@ -245,8 +245,8 @@ def main():
         logger.info(f"Judgment List Statistics: {json.dumps(stats, indent=2)}")
 
         # Save to CSV
-        judgment_df.to_csv(OUTPUT_FILE, index=False)
-        logger.info(f"Judgment list saved to {OUTPUT_FILE}")
+        judgment_df.to_csv(output_file, index=False)
+        logger.info(f"Judgment list saved to {output_file}")
 
         # Display sample
         logger.info("Sample judgment entries:")
