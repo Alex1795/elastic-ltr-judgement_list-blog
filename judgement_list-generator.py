@@ -223,8 +223,8 @@ def main():
     """Main function to generate judgment list from UBI data."""
 
     # Configuration
-    queries_index = "ubi_queries1"  # Update with your queries index name
-    events_index = "ubi_events2"  # Update with your events index name
+    queries_index = "ubi_queries"  # Update with your queries index name
+    events_index = "ubi_events"  # Update with your events index name
     output_file = "judgment_list.csv"
     api_key = os.getenv("ELASTICSEARCH_API_KEY")
     es_host = os.getenv("ELASTICSEARCH_HOST")
