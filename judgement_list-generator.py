@@ -226,8 +226,8 @@ def main():
     queries_index = "ubi_queries"  # Update with your queries index name
     events_index = "ubi_events"  # Update with your events index name
     output_file = "judgment_list.csv"
-    api_key = os.getenv("ELASTICSEARCH_API_KEY")
-    es_host = os.getenv("ELASTICSEARCH_HOST")
+    api_key = os.getenv("API_KEY")
+    es_host = os.getenv("ES_HOST")
 
     print(es_host)
     try:
