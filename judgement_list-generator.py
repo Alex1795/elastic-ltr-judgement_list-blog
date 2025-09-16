@@ -10,6 +10,27 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def connect_to_elasticsearch(host, api_key):
+    """Create and return Elasticsearch client"""
+    try:
+        es = Elasticsearch(
+            hosts=[host],
+            api_key=api_key,
+            request_timeout=60
+        )
+
+        # Test the connection
+        if es.ping():
+            print(f"✓ Successfully connected to Elasticsearch at {host}")
+            return es
+        else:
+            print("✗ Failed to connect to Elasticsearch")
+            return None
+    except Exception as e:
+        print(f"✗ Error connecting to Elasticsearch: {e}")
+        return None
+
+
 def fetch_ubi_data(es_client: Elasticsearch, queries_index: str, events_index: str,
                    size: int = 10000) -> Tuple[List[Dict], List[Dict]]:
     """
@@ -26,29 +47,41 @@ def fetch_ubi_data(es_client: Elasticsearch, queries_index: str, events_index: s
     """
     logger.info(f"Fetching data from {queries_index} and {events_index}")
 
-    # Fetch queries
-    queries_response = es_client.search(
-        index=queries_index,
-        body={
-            "query": {"match_all": {}},
-            "size": size
-        }
-    )
-    queries_data = [hit['_source'] for hit in queries_response['hits']['hits']]
-    logger.info(f"Fetched {len(queries_data)} queries")
+    # Fetch queries with error handling
+    try:
+        queries_response = es_client.search(
+            index=queries_index,
+            body={
+                "query": {"match_all": {}},
+                "size": size
+            }
+        )
+        queries_data = [hit['_source'] for hit in queries_response['hits']['hits']]
+        logger.info(f"Fetched {len(queries_data)} queries")
 
-    # Fetch events (only click events for now)
-    events_response = es_client.search(
-        index=events_index,
-        body={
-            "query": {
-                "term": {"message_type.keyword": "CLICK_THROUGH"}
-            },
-            "size": size
-        }
-    )
-    events_data = [hit['_source'] for hit in events_response['hits']['hits']]
-    logger.info(f"Fetched {len(events_data)} click events")
+    except Exception as e:
+        logger.error(f"Error fetching queries from {queries_index}: {e}")
+        raise
+
+    # Fetch events (only click events for now) with error handling
+    try:
+        events_response = es_client.search(
+            index=events_index,
+            body={
+                "query": {
+                    "term": {"message_type.keyword": "CLICK_THROUGH"}
+                },
+                "size": size
+            }
+        )
+        events_data = [hit['_source'] for hit in events_response['hits']['hits']]
+        logger.info(f"Fetched {len(events_data)} click events")
+
+    except Exception as e:
+        logger.error(f"Error fetching events from {events_index}: {e}")
+        raise
+
+    logger.info(f"Data fetch completed successfully - Queries: {len(queries_data)}, Events: {len(events_data)}")
 
     return queries_data, events_data
 
@@ -229,10 +262,9 @@ def main():
     api_key = os.getenv("API_KEY")
     es_host = os.getenv("ES_HOST")
 
-    print(es_host)
     try:
         # Initialize Elasticsearch client
-        es = Elasticsearch(hosts=es_host, api_key=api_key)
+        es = connect_to_elasticsearch(es_host, api_key)
 
         # Fetch UBI data
         queries_data, events_data = fetch_ubi_data(es, queries_index, events_index)
